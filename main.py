@@ -2,6 +2,7 @@
 # A basic calculator which helps to actualize the needed Bitcoin collateral for a loan at Nexo.io .
 # Don't forget! Not your keys, not your coins! Use loans responsibly!
 from btc import data
+from nexo import getInfo
 
 btc_actual_string = data["bpi"]["USD"]["rate"]
 btc_actual_usd = float(btc_actual_string.replace(",", ""))  # The actual price of Bitcoin in USD
@@ -23,7 +24,7 @@ def zero_apr_credit():
     print("The currently needed collateral for a 0% APR loan: ", zero_apr_collateral, " BTC")
     fine_tune = round((credit_wallet - zero_apr_collateral), 8)     # More or less BTC needed for 0% APR loan limit
     if fine_tune < 0:       # Basic test if the loan is either already margin called or at least one input is wrong.
-        print("You're loan either already margin called or some data is wrong! Start again!")
+        print("You're below the 0% APR limit. To upgrade back you need to add", fine_tune, " BTC to the Credit wallet. ")
     else:
         print("You're over or under collateralized with: ", fine_tune, " BTC")
         over_collateralized_percent = loan_amount / (credit_usd / 5)    # The over collateralized percentage
@@ -47,7 +48,7 @@ def normal_credit():
 
 if nexo.lower() == "true":      # If you have Nexo coins
     nexo_coins = float(input("Add the amount of Nexo you have in the Savings wallet: "))
-    nexo_current = float(input("Add the Nexo current Market Price (USD): "))
+    nexo_current = getInfo()        # Nexo live price feed from Coinmarketcap API (limited to daily 333)
 
     def nexo_loyalty():
         nexo_worth = ((nexo_coins * nexo_current) / (btc_actual_usd * total_btc)) * 100
@@ -72,10 +73,10 @@ if nexo.lower() == "true":      # If you have Nexo coins
     else:
         print("\n")
         normal_credit()
-        needed_nexo = ((btc_actual_usd * total_btc) * 0.1) - nexo_coins
+        needed_nexo = round(((btc_actual_usd * total_btc) * 0.1), 8) - nexo_coins
         # The amount of Nexo coins needed to be able to get 0% APR loans
         print("\n")
-        print("Right now to be able to get 0% APR loan you need to buy at least:", needed_nexo," Nexo coins")
+        print("Right now to be able to get 0% APR loan you need to buy at least:", needed_nexo, "Nexo coins")
 
 else:
     print("\n")
